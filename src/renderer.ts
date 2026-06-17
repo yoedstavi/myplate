@@ -73,7 +73,8 @@ export type TaskDataMeta = {
   // non-data
   taskCollapse: any,
   doneTaskCollapse: any,
-  taskWake: Function
+  taskWake: Function,
+  doneButton: HTMLButtonElement | undefined
 };
 
 export function setTaskOrder(newTaskOrder: string[], flagNeeded: boolean = false) {
@@ -90,7 +91,8 @@ export function defaultTaskMeta(isNew: boolean): TaskDataMeta {
     snoozeUntil: 0,
     taskCollapse: undefined,
     doneTaskCollapse: undefined,
-    taskWake: (): void => undefined
+    taskWake: (): void => undefined,
+    doneButton: undefined
   };
 }
 
@@ -211,7 +213,7 @@ function getTaskIds(uuid: string): getTaskIdsRet {
 function addTaskToPage(uuid: string, taskObj: TaskData) {
   const newTask = document.createElement("div");
   newTask.id = uuid;
-  const taskMeta = taskDataMeta[uuid as ObjKey] as unknown as TaskDataMeta;
+  const taskMeta = resolveTaskMetaByUuid(uuid);
   newTask.classList.add("mb-2", "accordion", "collapse", "scroll-margin-task");
   if (taskMeta.isVisible)
     newTask.classList.add("show");
@@ -314,6 +316,7 @@ function initTaskElements(
 
   taskMeta.taskCollapse = bootstrap.Collapse.getOrCreateInstance(newTask, { toggle: false });
   taskMeta.doneTaskCollapse = bootstrap.Collapse.getOrCreateInstance(newDoneTask, { toggle: false });
+  taskMeta.doneButton = doneTaskButton;
 
   titleText.innerText = taskObj.title;
 
@@ -399,6 +402,7 @@ function initTaskElements(
   restoreTaskButton.addEventListener("click", () => {
     taskObj.isDone = false;
   });
+  evaluateDoneButtonState(uuid, taskObj);
 
   // implement the Snooze button of a task
   taskMeta.taskWake = () => {
@@ -512,6 +516,13 @@ function taskEditTitleDone(uuid: string, inputElement: HTMLInputElement, titleTe
   inputElement.removeAttribute("is-modified");
 }
 
+// Check if the task may become "Done"
+function evaluateDoneButtonState(uuid: string, taskObj: TaskData): void {
+  const taskMeta = resolveTaskMetaByUuid(uuid);
+  const btn = (taskMeta.doneButton as HTMLButtonElement);
+  btn.disabled = (taskObj.dependencyList.length != 0);
+}
+
 function fillBlockingTasks(uuid: string, title: string) {
   const allBlockedBySet = getAllBlockedBy(uuid);
   const eventGuide = new Map<string, {
@@ -555,12 +566,14 @@ function fillBlockingTasks(uuid: string, title: string) {
     const checkbox = document.getElementById(id) as HTMLInputElement;
     const checkFunc = () => {
       addTaskToDependencyList(obj.taskObj, uuid);
+      evaluateDoneButtonState(obj.uuid, obj.taskObj);
       checkbox.removeEventListener("click", checkFunc);
       checkbox.addEventListener("click", uncheckFunc);
     };
 
     const uncheckFunc = () => {
       removeTaskFromDependencyList(obj.taskObj, uuid);
+      evaluateDoneButtonState(obj.uuid, obj.taskObj);
       checkbox.removeEventListener("click", uncheckFunc);
       checkbox.addEventListener("click", checkFunc);
     };
@@ -615,12 +628,14 @@ function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[
     const checkbox = document.getElementById(id) as HTMLInputElement;
     const checkFunc = () => {
       addTaskToDependencyList(taskObj, obj.uuid);
+      evaluateDoneButtonState(uuid, taskObj);
       checkbox.removeEventListener("click", checkFunc);
       checkbox.addEventListener("click", uncheckFunc);
     };
 
     const uncheckFunc = () => {
       removeTaskFromDependencyList(taskObj, obj.uuid);
+      evaluateDoneButtonState(uuid, taskObj);
       checkbox.removeEventListener("click", uncheckFunc);
       checkbox.addEventListener("click", checkFunc);
     };
