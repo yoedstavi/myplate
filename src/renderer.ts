@@ -678,7 +678,8 @@ function periodicStuff() {
   modifyClock();
   let doneTasks = 0;
   let visibleTasks = 0;
-  for (const [uuid, taskObj] of Object.entries(taskData)) {
+  for (const [uuid, taskObjAny] of Object.entries(taskData)) {
+    const taskObj = taskObjAny as TaskData;
     const taskMeta = resolveTaskMetaByUuid(uuid);
     const v = evaluateTaskVisibility(taskObj, taskMeta, uuid);
     const toggleVisible = (taskMeta.isVisible != v);
@@ -728,8 +729,8 @@ function addAllTasksToPage() {
 
 function refreshPageTasks() {
   // clear existing child elements
-  myActiveTasks.replaceChildren();
-  myDoneTasks.replaceChildren();
+  myActiveTasks.replaceChildren(placeholderTasks);
+  myDoneTasks.replaceChildren(placeholderDoneTasks);
   addAllTasksToPage();
 }
 
