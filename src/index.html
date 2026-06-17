@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>My Plate</title>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <h1>My Plate</h1>
+    <h4>Multitask like a machine!</h4>
+  </div>
+  <!-- This is the top navbar with the important buttons -->
+  <nav class="navbar bg-body sticky-top border-bottom mb-2">
+    <div class="container-fluid  justify-content-start col">
+      <button type="button" class="btn btn-primary me-2" id="addTaskButton" disabled>Add a task</button>
+      <button type="button" class="btn btn-primary me-2" id="saveButton" disabled>Save</button>
+      <input type="checkbox" class="btn-check" id="showSnoozedButton" autocomplete="off" disabled>
+      <label class="btn btn-primary me-2" id="showSnoozedLabel" for="showSnoozedButton">Show Snoozed</label>
+      <button type="button" class="btn btn-primary me-2" id="wakeAllButton" disabled>Wake All</button>
+      <button type="button" class="btn btn-primary me-2" id="sortTasksButton" disabled>Sort</button>
+      <input type="checkbox" class="btn-check" id="hideBlockedButton" autocomplete="off" disabled>
+      <label class="btn btn-primary me-2" id="hideBlockedLabel" for="hideBlockedButton">Hide Blocked</label>
+    </div>
+    <div class="col-auto me-4 font-monospace fs-2" id="navClock">
+    </div>
+  </nav>
+  <!-- The lists of tasks, main content -->
+  <div class="container-fluid mb-5">
+    <div id="myActiveTasks" class="mb-5">
+      <div class="text-secondary d-none" id="placeholderTasks">
+        Nothing here yet...
+      </div>
+    </div>
+    <h4>Done Tasks</h4>
+    <div id="myDoneTasks">
+      <div class="text-secondary d-none" id="placeholderDoneTasks">
+        Nothing here yet...
+      </div>
+    </div>
+  </div>
+  <!-- Modal windows -->
+  <div class="modal fade" tabindex="-1" id="thisTaskDependsOnOtherModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Blocking Tasks</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="blockedByTasksList">
+          This task depends on other
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" tabindex="-1" id="otherTasksDepenOnThisModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Blocked Tasks</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="blockingTasksList">
+          Other tasks depend on this
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
