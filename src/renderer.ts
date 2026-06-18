@@ -46,6 +46,7 @@ declare namespace tasksDataStorage {
   function disableSaveOnUnload(callback: Function): void;
   function triggerReload(): void;
   function bindSaveShortcut(callback: Function): void;
+  function bindNewShortcut(callback: Function): void;
 }
 
 // HACK to resolve issue with webpack, fix this when you are smarter
@@ -153,8 +154,6 @@ function saveTaskData(closing = false) {
 function saveButtonHandler() {
   saveTaskData();
 }
-
-tasksDataStorage.bindSaveShortcut(() => saveTaskData());
 
 function periodicAutoSave(refTaskData: string) {
   ++noChangeCounter;
@@ -804,6 +803,8 @@ async function loadInitData() {
   wakeAllButton.disabled = false;
   hideBlocked.disabled = false;
 
+  tasksDataStorage.bindNewShortcut(() => addTaskButtonHandler());
+  tasksDataStorage.bindSaveShortcut(() => saveTaskData());
 
   startPeriodicSave();
   setInterval(periodicStuff, 200);

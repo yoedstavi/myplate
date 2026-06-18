@@ -38,6 +38,13 @@ const menu = Menu.buildFromTemplate([
     },
     accelerator: 'CommandOrControl+S'
   },  
+  {
+    label: 'New',
+    click: () => {
+      webContents.send('user-new');
+    },
+    accelerator: 'CommandOrControl+N'
+  },  
 ]);
 
 // The first submenu needs to be the app menu on macOS

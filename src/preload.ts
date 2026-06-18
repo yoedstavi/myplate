@@ -10,6 +10,7 @@ const tasksDataStorage = {
     disableSaveOnUnload: (callback: Function) => ipcRenderer.on('user-reload', () => callback()),
     triggerReload: () => ipcRenderer.send('trigger-reload'),
     bindSaveShortcut: (callback: Function) => ipcRenderer.on('user-save', () => callback()),
+    bindNewShortcut: (callback: Function) => ipcRenderer.on('user-new', () => callback()),
 };
 
 contextBridge.exposeInMainWorld('tasksDataStorage', tasksDataStorage);
