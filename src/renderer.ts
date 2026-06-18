@@ -43,6 +43,8 @@ import {
 declare namespace tasksDataStorage {
   function saveToJsonFile(tasksData: Object): void;
   function loadFromJsonFile(): Promise<Object>;
+  function disableSaveOnUnload(callback: Function): void;
+  function triggerReload(): void;
 }
 
 // HACK to resolve issue with webpack, fix this when you are smarter
@@ -96,6 +98,12 @@ export function defaultTaskMeta(isNew: boolean): TaskDataMeta {
   };
 }
 
+let saveOnUnload = true;
+tasksDataStorage.disableSaveOnUnload(() => {
+  saveOnUnload = false;
+  tasksDataStorage.triggerReload();
+})
+
 function resolveTaskByUuid(uuid: string): TaskData {
   return taskData[uuid as ObjKey] as unknown as TaskData;
 }
@@ -121,21 +129,24 @@ const sortTasksButton = document.getElementById("sortTasksButton") as HTMLButton
 let thisTaskDependsOnOtherModal: bootstrap.Modal | undefined = undefined;
 let otherTasksDepenOnThisModal: bootstrap.Modal | undefined = undefined;
 
-var noChangeCounter = 1000;
-var autoSaveHandle: NodeJS.Timeout | undefined = undefined;
-var placeholderTasksVisible = false;
-var placeholderDoneTasksVisible = false;
+let noChangeCounter = 1000;
+let autoSaveHandle: NodeJS.Timeout | undefined = undefined;
+let placeholderTasksVisible = false;
+let placeholderDoneTasksVisible = false;
+
+new bootstrap.Tooltip(sortTasksButton);
 
 function startPeriodicSave() {
   autoSaveHandle = setTimeout(periodicAutoSave, 1000, JSON.stringify(taskData));
 }
 
-function saveTaskData() {
+function saveTaskData(closing = false) {
   clearTimeout(autoSaveHandle as NodeJS.Timeout);
   noChangeCounter = 1000;
   tasksDataStorage.saveToJsonFile(taskData);
   saveButton.disabled = true;
-  startPeriodicSave();
+  if (!closing)
+    startPeriodicSave();
 }
 
 function saveButtonHandler() {
@@ -797,3 +808,7 @@ async function loadInitData() {
 
 loadInitData()
 
+window.addEventListener('beforeunload', (ev) => {
+  if (saveOnUnload)
+    saveTaskData(true);
+});

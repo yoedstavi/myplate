@@ -7,6 +7,8 @@ import { contextBridge, ipcRenderer } from 'electron';
 const tasksDataStorage = {
     saveToJsonFile: (tasksData: Object) => ipcRenderer.send('save-tasks', tasksData),
     loadFromJsonFile: () => ipcRenderer.invoke('load-tasks'),
+    disableSaveOnUnload: (callback: Function) => ipcRenderer.on('user-reload', () => callback()),
+    triggerReload: () => ipcRenderer.send('trigger-reload'),
 };
 
 contextBridge.exposeInMainWorld('tasksDataStorage', tasksDataStorage);

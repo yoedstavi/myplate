@@ -14,16 +14,17 @@
   <!-- This is the top navbar with the important buttons -->
   <nav class="navbar bg-body sticky-top border-bottom mb-2">
     <div class="container-fluid  justify-content-start col">
-      <button type="button" class="btn btn-primary me-2" id="addTaskButton" disabled>Add a task</button>
-      <button type="button" class="btn btn-primary me-2" id="saveButton" disabled>Save</button>
+      <button type="button" class="btn btn-primary me-2 mb-1" id="addTaskButton" disabled>Add a task</button>
+      <button type="button" class="btn btn-primary me-2 mb-1" id="saveButton" disabled>Save</button>
       <input type="checkbox" class="btn-check" id="showSnoozedButton" autocomplete="off" disabled>
-      <label class="btn btn-primary me-2" id="showSnoozedLabel" for="showSnoozedButton">Show Snoozed</label>
-      <button type="button" class="btn btn-primary me-2" id="wakeAllButton" disabled>Wake All</button>
-      <button type="button" class="btn btn-primary me-2" id="sortTasksButton" disabled>Sort</button>
+      <label class="btn btn-primary me-2 mb-1" id="showSnoozedLabel" for="showSnoozedButton">Show Snoozed</label>
+      <button type="button" class="btn btn-primary me-2 mb-1" id="wakeAllButton" disabled>Wake All</button>
+      <button type="button" class="btn btn-primary me-2 mb-1" id="sortTasksButton" data-bs-toggle="tooltip"
+        data-bs-placement="bottom" data-bs-title="Sort tasks by dependency" disabled>Sort</button>
       <input type="checkbox" class="btn-check" id="hideBlockedButton" autocomplete="off" disabled>
-      <label class="btn btn-primary me-2" id="hideBlockedLabel" for="hideBlockedButton">Hide Blocked</label>
+      <label class="btn btn-primary me-2 mb-1" id="hideBlockedLabel" for="hideBlockedButton">Hide Blocked</label>
     </div>
-    <div class="col-auto me-4 font-monospace fs-2" id="navClock">
+    <div class="col-auto ms-3 me-4 font-monospace fs-2" id="navClock">
     </div>
   </nav>
   <!-- The lists of tasks, main content -->
