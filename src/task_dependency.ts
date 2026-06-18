@@ -66,12 +66,15 @@ export function sortTasksByDependency(): string[] {
     return sortDependencyMap(buildTempDependencyMap());
 }
 
-export function removeFromAllDependencyLists(uuid: string): void {
-    for (const [, taskObjAny] of Object.entries(taskData)) {
+export function removeFromAllDependencyLists(uuid: string): string[] {
+    const ret: string[] = [];
+    for (const [taskId, taskObjAny] of Object.entries(taskData)) {
         const taskObj = taskObjAny as TaskData;
-        removeTaskFromDependencyList(taskObj, uuid, true);
+        if(removeTaskFromDependencyList(taskObj, uuid, true))
+            ret.push(taskId);
     }
     checkTaskOrder();
+    return ret;
 }
 
 function checkTaskOrder(): void {
@@ -98,14 +101,17 @@ export function addTaskToDependencyList(taskObj: TaskData, uuidToAdd: string) {
     checkTaskOrder();
 }
 
-export function removeTaskFromDependencyList(taskObj: TaskData, uuidToRemove: string, skipCheck = false) {
+export function removeTaskFromDependencyList(taskObj: TaskData, uuidToRemove: string, skipCheck = false): boolean {
     const i = taskObj.dependencyList.lastIndexOf(uuidToRemove);
-    if (i >= 0)
+    let ret = false;
+    if (i >= 0) {
         taskObj.dependencyList.splice(i, 1);
+        ret = true;
+    }
 
-    if (skipCheck)
-        return;
+    if (!skipCheck)
+        checkTaskOrder();
 
-    checkTaskOrder();
+    return ret;
 }
 

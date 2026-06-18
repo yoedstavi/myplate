@@ -136,6 +136,7 @@ let autoSaveHandle: NodeJS.Timeout | undefined = undefined;
 let placeholderTasksVisible = false;
 let placeholderDoneTasksVisible = false;
 
+new bootstrap.Tooltip(saveButton);
 new bootstrap.Tooltip(sortTasksButton);
 
 function startPeriodicSave() {
@@ -243,7 +244,7 @@ function addTaskToPage(uuid: string, taskObj: TaskData) {
                 <div class="col" id="${tids.titleTextColId}">
                   <span id="${tids.titleTextId}"></span>
                   &nbsp;&nbsp;&nbsp;<i class="bi bi-pencil"
-                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="shortcut: e" id="${tids.editButtonId}"></i>
+                   data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Shortcut: e" id="${tids.editButtonId}"></i>
                 </div>
                 <div class="col d-none" id="${tids.editCol1Id}">
                   <input class="form-control" type="text" placeholder="Task Title" id="${tids.titleInputId}"/>
@@ -410,7 +411,8 @@ function initTaskElements(
   // implement the Done button of a task
   doneTaskButton.addEventListener("click", () => {
     taskObj.isDone = true;
-    removeFromAllDependencyLists(uuid);
+    for (const taskId of removeFromAllDependencyLists(uuid))
+      evaluateDoneButtonState(taskId, resolveTaskByUuid(taskId))
   });
   restoreTaskButton.addEventListener("click", () => {
     taskObj.isDone = false;
@@ -439,7 +441,8 @@ function initTaskElements(
     delete taskData[uuid as ObjKey];
     delete taskDataMeta[uuid as ObjKey];
     taskOrder.splice(taskOrder.lastIndexOf(uuid), 1);
-    removeFromAllDependencyLists(uuid);
+    for (const taskId of removeFromAllDependencyLists(uuid))
+      evaluateDoneButtonState(taskId, resolveTaskByUuid(taskId))
   }
   deleteTaskButton.addEventListener("click", deleteTaskImp);
   historicDeleteButton.addEventListener("click", deleteTaskImp);
@@ -805,6 +808,8 @@ async function loadInitData() {
 
   tasksDataStorage.bindNewShortcut(() => addTaskButtonHandler());
   tasksDataStorage.bindSaveShortcut(() => saveTaskData());
+
+  new bootstrap.Tooltip(addTaskButton);
 
   startPeriodicSave();
   setInterval(periodicStuff, 200);
