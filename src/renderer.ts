@@ -45,6 +45,7 @@ declare namespace tasksDataStorage {
   function loadFromJsonFile(): Promise<Object>;
   function disableSaveOnUnload(callback: Function): void;
   function triggerReload(): void;
+  function bindSaveShortcut(callback: Function): void;
 }
 
 // HACK to resolve issue with webpack, fix this when you are smarter
@@ -152,6 +153,8 @@ function saveTaskData(closing = false) {
 function saveButtonHandler() {
   saveTaskData();
 }
+
+tasksDataStorage.bindSaveShortcut(() => saveTaskData());
 
 function periodicAutoSave(refTaskData: string) {
   ++noChangeCounter;

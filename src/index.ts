@@ -23,13 +23,22 @@ if (require('electron-squirrel-startup')) {
 
 let webContents: WebContents;
 
-const menu = Menu.buildFromTemplate([{
-  label: 'Open a Dialog',
-  click: () => {
-    webContents.send('user-reload');
+const menu = Menu.buildFromTemplate([
+  {
+    label: 'Revert',
+    click: () => {
+      webContents.send('user-reload');
+    },
+    accelerator: 'CommandOrControl+R'
   },
-  accelerator: 'CommandOrControl+R'
-}]);
+  {
+    label: 'Save',
+    click: () => {
+      webContents.send('user-save');
+    },
+    accelerator: 'CommandOrControl+S'
+  },  
+]);
 
 // The first submenu needs to be the app menu on macOS
 if (process.platform === 'darwin') {

@@ -9,6 +9,7 @@ const tasksDataStorage = {
     loadFromJsonFile: () => ipcRenderer.invoke('load-tasks'),
     disableSaveOnUnload: (callback: Function) => ipcRenderer.on('user-reload', () => callback()),
     triggerReload: () => ipcRenderer.send('trigger-reload'),
+    bindSaveShortcut: (callback: Function) => ipcRenderer.on('user-save', () => callback()),
 };
 
 contextBridge.exposeInMainWorld('tasksDataStorage', tasksDataStorage);
