@@ -493,6 +493,7 @@ function addTaskButtonHandler() {
     enumerable: true
   });
   addTaskToPage(uuid, taskObj);
+  taskOrder.push(uuid);
 }
 
 function taskEditTitle(titleInput: HTMLInputElement, titleText: HTMLSpanElement, titleTextCol: HTMLDivElement,
