@@ -143,9 +143,12 @@ function startPeriodicSave() {
   autoSaveHandle = setTimeout(periodicAutoSave, 1000, JSON.stringify(taskData));
 }
 
+let editTitleDoneSaveCallback = () => {};
+
 function saveTaskData(closing = false) {
   clearTimeout(autoSaveHandle as NodeJS.Timeout);
   noChangeCounter = 1000;
+  editTitleDoneSaveCallback();
   tasksDataStorage.saveToJsonFile(taskData);
   saveButton.disabled = true;
   if (!closing)
@@ -362,11 +365,14 @@ function initTaskElements(
   }
 
   // A function to edit the task title with a shortcut or a button
-  const taskEditFunction = () => taskEditTitle(titleInput,
-    titleText,
-    titleTextCol,
-    editCol1,
-    collapseButton);
+  const taskEditFunction = () => {
+    taskEditTitle(titleInput,
+      titleText,
+      titleTextCol,
+      editCol1,
+      collapseButton);
+    editTitleDoneSaveCallback = taskEditTitleDoneFunction;
+  }
 
   // bind a shortcut to edit the title
   collapseButton.addEventListener("keydown", event => {
@@ -376,12 +382,15 @@ function initTaskElements(
   });
 
   // A function to save the task title with a shortcut or a button
-  const taskEditTitleDoneFunction = () => taskEditTitleDone(uuid,
-    titleInput,
-    titleTextCol,
-    editCol1,
-    collapseButton,
-    titleText);
+  const taskEditTitleDoneFunction = () => {
+    taskEditTitleDone(uuid,
+      titleInput,
+      titleTextCol,
+      editCol1,
+      collapseButton,
+      titleText);
+    editTitleDoneSaveCallback = () => {};
+  }
 
   titleInput.addEventListener("keydown", event => {
     if (event.key === "Enter") {
