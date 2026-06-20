@@ -147,7 +147,7 @@ function stopPeriodicSave() {
   clearTimeout(autoSaveHandle);
 }
 
-let editTitleDoneSaveCallback = () => {};
+let editTitleDoneSaveCallback = () => { };
 
 function saveTaskData(closing = false) {
   stopPeriodicSave();
@@ -358,6 +358,8 @@ function initTaskElements(
     },
     readOnly: true,
   });
+  aceEditor.commands.removeCommand('goToNextError');
+  aceEditor.commands.removeCommand('goToPreviousError');
 
   // save the collapsed state of the accordion when it's changed
   taskDetails.addEventListener("hide.bs.collapse", () => taskObj.showDetails = false);
@@ -394,7 +396,7 @@ function initTaskElements(
       editCol1,
       collapseButton,
       titleText);
-    editTitleDoneSaveCallback = () => {};
+    editTitleDoneSaveCallback = () => { };
     startPeriodicSave();
   }
 
