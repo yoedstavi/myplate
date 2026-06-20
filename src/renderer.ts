@@ -132,7 +132,7 @@ let thisTaskDependsOnOtherModal: bootstrap.Modal | undefined = undefined;
 let otherTasksDepenOnThisModal: bootstrap.Modal | undefined = undefined;
 
 let noChangeCounter = 1000;
-let autoSaveHandle: NodeJS.Timeout | undefined = undefined;
+let autoSaveHandle: NodeJS.Timeout;
 let placeholderTasksVisible = false;
 let placeholderDoneTasksVisible = false;
 
@@ -143,10 +143,14 @@ function startPeriodicSave() {
   autoSaveHandle = setTimeout(periodicAutoSave, 1000, JSON.stringify(taskData));
 }
 
+function stopPeriodicSave() {
+  clearTimeout(autoSaveHandle);
+}
+
 let editTitleDoneSaveCallback = () => {};
 
 function saveTaskData(closing = false) {
-  clearTimeout(autoSaveHandle as NodeJS.Timeout);
+  stopPeriodicSave();
   noChangeCounter = 1000;
   editTitleDoneSaveCallback();
   tasksDataStorage.saveToJsonFile(taskData);
@@ -365,19 +369,20 @@ function initTaskElements(
   }
 
   // A function to edit the task title with a shortcut or a button
-  const taskEditFunction = () => {
+  const taskEditTitleFunction = () => {
     taskEditTitle(titleInput,
       titleText,
       titleTextCol,
       editCol1,
       collapseButton);
     editTitleDoneSaveCallback = taskEditTitleDoneFunction;
+    stopPeriodicSave();
   }
 
   // bind a shortcut to edit the title
   collapseButton.addEventListener("keydown", event => {
     if (event.key === 'e') {
-      taskEditFunction();
+      taskEditTitleFunction();
     }
   });
 
@@ -390,6 +395,7 @@ function initTaskElements(
       collapseButton,
       titleText);
     editTitleDoneSaveCallback = () => {};
+    startPeriodicSave();
   }
 
   titleInput.addEventListener("keydown", event => {
@@ -412,7 +418,7 @@ function initTaskElements(
   const pauseCollapse = () => collapseButton.removeAttribute("data-bs-toggle");
   const resumeCollapse = () => collapseButton.setAttribute("data-bs-toggle", "collapse");
 
-  editButton.addEventListener("click", taskEditFunction);
+  editButton.addEventListener("click", taskEditTitleFunction);
   editButton.addEventListener("mouseenter", pauseCollapse);
   editButton.addEventListener("mouseleave", resumeCollapse);
   new bootstrap.Tooltip(editButton);
@@ -471,7 +477,7 @@ function initTaskElements(
   });
 
   if (taskMeta.isNew) {
-    taskEditFunction();
+    taskEditTitleFunction();
     aceEditor.setValue(taskObj.notes); // default init text, selected
     // The full collapsible element is not immediately in view
     setTimeout(() => newTask.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
