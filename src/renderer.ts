@@ -66,7 +66,8 @@ export type TaskData = {
   title: string,
   notes: string,
   isDone: boolean,
-  dependencyList: string[]
+  dependencyList: string[],
+  categories: string[],
 };
 
 export type TaskDataMeta = {
@@ -100,6 +101,13 @@ export function defaultTaskMeta(isNew: boolean): TaskDataMeta {
   };
 }
 
+type CategoryDisplayState = {
+  checkbox: HTMLInputElement | undefined;
+  state: boolean;
+};
+
+const categoriesToDisplay = new Map<string, CategoryDisplayState>();
+
 let saveOnUnload = true;
 tasksDataStorage.disableSaveOnUnload(() => {
   saveOnUnload = false;
@@ -124,12 +132,23 @@ const placeholderTasks = document.getElementById("placeholderTasks") as HTMLDivE
 const placeholderDoneTasks = document.getElementById("placeholderDoneTasks") as HTMLDivElement;
 const thisTaskDependsOnOtherDiv = document.getElementById("thisTaskDependsOnOtherModal") as HTMLDivElement;
 const otherTasksDepenOnThisDiv = document.getElementById("otherTasksDepenOnThisModal") as HTMLDivElement;
+const editCategoryDiv = document.getElementById("editCategoryModal") as HTMLDivElement;
 const blockingTasksList = document.getElementById("blockingTasksList") as HTMLDivElement;
 const blockedByTasksList = document.getElementById("blockedByTasksList") as HTMLDivElement;
+const editCategoryTasksList = document.getElementById("editCategoryTasksList") as HTMLDivElement;
+const editCategoryDropdown = document.getElementById("editCategoryDropdown") as HTMLSelectElement;
+const editCategoryName = document.getElementById("editCategoryName") as HTMLSpanElement;
 const saveButton = document.getElementById("saveButton") as HTMLButtonElement;
 const sortTasksButton = document.getElementById("sortTasksButton") as HTMLButtonElement;
+const categoryDisplayControls = document.getElementById("categoryDisplayControls") as HTMLDivElement;
+const categoryDisplayAllCheckbox = document.getElementById("categoryDisplayAllCheckbox") as HTMLInputElement;
+const categoryDisplayNoneCheckbox = document.getElementById("categoryDisplayNoneCheckbox") as HTMLInputElement;
+const newCategoryButton = document.getElementById("newCategoryButton") as HTMLButtonElement;
+const newCategoryText = document.getElementById("newCategoryText") as HTMLInputElement;
+
 let thisTaskDependsOnOtherModal: bootstrap.Modal | undefined = undefined;
 let otherTasksDepenOnThisModal: bootstrap.Modal | undefined = undefined;
+let editCategoryModal: bootstrap.Modal | undefined = undefined;
 
 let noChangeCounter = 1000;
 let autoSaveHandle: NodeJS.Timeout;
@@ -148,6 +167,7 @@ function stopPeriodicSave() {
 }
 
 let editTitleDoneSaveCallback = () => { };
+let newCategoryError: Function;
 
 function saveTaskData(closing = false) {
   stopPeriodicSave();
@@ -182,12 +202,27 @@ function isSnoozed(taskMeta: TaskDataMeta) {
   return (Date.now() < taskMeta.snoozeUntil);
 }
 
-function evaluateTaskVisibility(taskObj: TaskData, taskMeta: TaskDataMeta, uuid: string) {
+function evaluateCategoryVisibility(taskObj: TaskData): boolean {
+  for (const category of taskObj.categories) {
+    const categoryDisplayState = categoriesToDisplay.get(category);
+
+    // if it's called before the map is populated
+    if (!categoryDisplayState)
+      return true;
+
+    if (categoryDisplayState.state)
+      return true;
+  }
+  return false;
+}
+
+function evaluateTaskVisibility(taskObj: TaskData, taskMeta: TaskDataMeta, uuid: string): boolean {
   // Expand this function when advanced filters are implemented
   return (
     !taskObj.isDone &&
     (!isSnoozed(taskMeta) || showSnoozed.checked) &&
-    (taskObj.dependencyList.length == 0 || !hideBlocked.checked)
+    (taskObj.dependencyList.length == 0 || !hideBlocked.checked) &&
+    evaluateCategoryVisibility(taskObj)
   );
 }
 
@@ -496,7 +531,8 @@ function addTaskButtonHandler() {
     title: '',
     notes: 'Task Notes',
     isDone: false,
-    dependencyList: []
+    dependencyList: [],
+    categories: ['all']
   };
 
   Object.defineProperty(taskData, uuid, {
@@ -504,11 +540,18 @@ function addTaskButtonHandler() {
     configurable: true,
     enumerable: true
   });
+
   Object.defineProperty(taskDataMeta, uuid, {
     value: defaultTaskMeta(true),
     configurable: true,
     enumerable: true
   });
+
+  for (const [category, cds] of categoriesToDisplay) {
+    if (category != 'all' && cds.state)
+      taskObj.categories.push(category);
+  }
+
   addTaskToPage(uuid, taskObj);
   taskOrder.push(uuid);
 }
@@ -681,6 +724,76 @@ function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[
   }
 }
 
+function addCategoryToTask(taskObj: TaskData, category: string) {
+  taskObj.categories.push(category);
+}
+
+function removeCategoryFromTask(taskObj: TaskData, category: string) {
+  const cats = taskObj.categories;
+  const i = cats.lastIndexOf(category);
+  cats.splice(i, 1);
+}
+
+function fillEditCategory(category: string) {
+  const eventGuide = new Map<string, {
+    inCategory: boolean,
+    uuid: string,
+    taskObj: TaskData,
+  }>();
+  editCategoryName.innerText = category;
+  let content = '';
+  for (const [taskId, taskObj] of Object.entries(taskData)) {
+    if (taskObj.isDone) // skip done tasks
+      continue;
+
+    const ctrl = crypto.randomUUID();
+    const inCategory = (taskObj.categories.lastIndexOf(category) != -1);
+    eventGuide.set(ctrl, {
+      inCategory: inCategory,
+      uuid: taskId,
+      taskObj: taskObj,
+    });
+    content += `
+      <div class="input-group mb-3">
+        <div class="input-group-text">
+          <input class="form-check-input mt-0" type="checkbox"
+            ${inCategory ? "checked" : ""}
+            id="${ctrl}">
+        </div>
+        <div class="input-group-text w-75">
+          <div class="text-start text-truncate w-100">
+            ${taskObj.title}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  editCategoryTasksList.replaceChildren();
+  editCategoryTasksList.innerHTML = content;
+
+  // Now the elements exist, attach the events
+  for (const [id, obj] of eventGuide) {
+    const checkbox = document.getElementById(id) as HTMLInputElement;
+    const checkFunc = () => {
+      addCategoryToTask(obj.taskObj, category);
+      checkbox.removeEventListener("click", checkFunc);
+      checkbox.addEventListener("click", uncheckFunc);
+    };
+
+    const uncheckFunc = () => {
+      removeCategoryFromTask(obj.taskObj, category);
+      checkbox.removeEventListener("click", uncheckFunc);
+      checkbox.addEventListener("click", checkFunc);
+    };
+
+    if (obj.inCategory)
+      checkbox.addEventListener("click", uncheckFunc);
+    else
+      checkbox.addEventListener("click", checkFunc);
+  }
+}
+
+
 const navClock = document.getElementById("navClock") as HTMLDivElement;
 function modifyClock() {
   const now = new Date();
@@ -769,6 +882,78 @@ function periodicStuff() {
   }
 }
 
+function addAllCategoryDisplayControls(categoryAllDisplayState: CategoryDisplayState) {
+  for (const [category,] of categoriesToDisplay) {
+    if (category == 'all')
+      continue;
+
+    addCategoryDisplayControl(category, categoryAllDisplayState);
+
+  }
+}
+
+function addCategoryDisplayControl(category: string, categoryAllDisplayState?: CategoryDisplayState) {
+  if (!categoryAllDisplayState)
+    categoryAllDisplayState = categoriesToDisplay.get('all');
+
+  if (!categoryAllDisplayState)
+    throw new Error("categoryAllDisplayState must already exist!");
+
+  const categoryControl = document.createElement('div');
+  categoryControl.classList.add("col-auto", "pe-0");
+
+  const inputGroup = document.createElement('div');
+  inputGroup.classList.add("input-group", "input-group-sm");
+  categoryControl.appendChild(inputGroup);
+
+  const divContainsCheckbox = document.createElement('div');
+  divContainsCheckbox.classList.add("input-group-text");
+  inputGroup.appendChild(divContainsCheckbox);
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.classList.add("form-check-input", "mt-0");
+  checkbox.id = crypto.randomUUID();
+  divContainsCheckbox.appendChild(checkbox);
+
+  const checkboxLabel = document.createElement('label');
+  checkboxLabel.setAttribute('for', checkbox.id);
+  checkboxLabel.classList.add("input-group-text", "user-select-none");
+  checkboxLabel.innerText = category;
+  inputGroup.appendChild(checkboxLabel);
+
+  const categoryDisplayState: CategoryDisplayState = { state: false, checkbox: checkbox };
+  categoriesToDisplay.set(category, categoryDisplayState);
+  checkbox.addEventListener('change', () => {
+    categoryDisplayState.state = checkbox.checked;
+    (categoryAllDisplayState.checkbox as HTMLInputElement).checked = false;
+    categoryAllDisplayState.state = false;
+  });
+
+  categoryDisplayControls.appendChild(categoryControl);
+
+  const option = document.createElement('option');
+  option.text = category;
+  option.value = category;
+  editCategoryDropdown.add(option);
+}
+
+function addNewCategory(category: string) {
+  newCategoryText.value = '';
+
+  if (categoriesToDisplay.has(category)) {
+    // Display an error message
+    newCategoryError();
+    return;
+  }
+  if (!category) {
+    return;
+  }
+  addCategoryDisplayControl(category);
+  fillEditCategory(category);
+  (editCategoryModal as bootstrap.Modal).show();
+}
+
 function addAllTasksToPage() {
   for (const uuid of taskOrder) {
     const taskObj = resolveTaskByUuid(uuid);
@@ -791,8 +976,9 @@ function sortButtonHandler() {
 async function loadInitData() {
   taskData = await tasksDataStorage.loadFromJsonFile();
 
-  thisTaskDependsOnOtherModal = new bootstrap.Modal(thisTaskDependsOnOtherDiv as Element);
-  otherTasksDepenOnThisModal = new bootstrap.Modal(otherTasksDepenOnThisDiv as Element);
+  thisTaskDependsOnOtherModal = new bootstrap.Modal(thisTaskDependsOnOtherDiv);
+  otherTasksDepenOnThisModal = new bootstrap.Modal(otherTasksDepenOnThisDiv);
+  editCategoryModal = new bootstrap.Modal(editCategoryDiv);
 
   taskOrder = sortTasksByDependency();
   for (const [uuid, taskObj] of Object.entries(taskData)) {
@@ -803,7 +989,31 @@ async function loadInitData() {
       configurable: true,
       enumerable: true
     });
+
+    for (const category of taskObj.categories)
+      categoriesToDisplay.set(category, { state: false, checkbox: undefined });
   };
+
+  const categoryAllDisplayState: CategoryDisplayState = { state: true, checkbox: categoryDisplayAllCheckbox };
+  categoriesToDisplay.set('all', categoryAllDisplayState);
+  categoryDisplayAllCheckbox.addEventListener('change',
+    () => categoryAllDisplayState.state = categoryDisplayAllCheckbox.checked);
+
+  categoryDisplayNoneCheckbox.addEventListener('change', () => {
+    for (const [, ctd] of categoriesToDisplay) {
+      (ctd.checkbox as HTMLInputElement).checked = false;
+      ctd.state = false;
+    }
+    setTimeout(() => categoryDisplayNoneCheckbox.checked = false, 100);
+  });
+
+  addAllCategoryDisplayControls(categoryAllDisplayState);
+  editCategoryDropdown.addEventListener('change', () => {
+    const category = editCategoryDropdown.value;
+    fillEditCategory(category);
+    (editCategoryModal as bootstrap.Modal).show();
+    editCategoryDropdown.selectedIndex = 0;
+  })
   addAllTasksToPage();
 
   // enable the navbar buttons
@@ -818,6 +1028,13 @@ async function loadInitData() {
     showSnoozed.checked ? 'Hide Snoozed' : 'Show Snoozed');
   hideBlocked.addEventListener("click", event => hideBlockedLabel.innerText =
     hideBlocked.checked ? 'Show Blocked' : 'Hide Blocked');
+
+  newCategoryButton.addEventListener('click', () => addNewCategory(newCategoryText.value));
+  newCategoryText.addEventListener('change', () => newCategoryButton.click());
+
+  const errorMessageToastDiv = document.getElementById("errorMessageToast") as HTMLDivElement;
+  const errorMessageToast = bootstrap.Toast.getOrCreateInstance(errorMessageToastDiv);
+  newCategoryError = () => errorMessageToast.show();
 
   addTaskButton.disabled = false;
   showSnoozed.disabled = false;

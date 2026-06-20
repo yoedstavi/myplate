@@ -12,22 +12,64 @@
     <h4>Multitask like a machine!</h4>
   </div>
   <!-- This is the top navbar with the important buttons -->
-  <nav class="navbar bg-body sticky-top border-bottom mb-2">
-    <div class="container-fluid  justify-content-start col">
-      <button type="button" class="btn btn-primary me-2 mb-1" id="addTaskButton" data-bs-toggle="tooltip"
-        data-bs-placement="bottom" data-bs-title="Shortcut: Ctrl+N" disabled>Add a task</button>
-      <button type="button" class="btn btn-primary me-2 mb-1" id="saveButton" data-bs-toggle="tooltip"
-        data-bs-placement="bottom" data-bs-title="Shortcut: Ctrl+S" disabled>Save</button>
-      <input type="checkbox" class="btn-check" id="showSnoozedButton" autocomplete="off" disabled>
-      <label class="btn btn-primary me-2 mb-1" id="showSnoozedLabel" for="showSnoozedButton">Show Snoozed</label>
-      <button type="button" class="btn btn-primary me-2 mb-1" id="wakeAllButton" disabled>Wake All</button>
-      <button type="button" class="btn btn-primary me-2 mb-1" id="sortTasksButton" data-bs-toggle="tooltip"
-        data-bs-placement="bottom" data-bs-title="Sort tasks by dependency" disabled>Sort</button>
-      <input type="checkbox" class="btn-check" id="hideBlockedButton" autocomplete="off" disabled>
-      <label class="btn btn-primary me-2 mb-1" id="hideBlockedLabel" for="hideBlockedButton">Hide Blocked</label>
+  <nav class="navbar bg-body sticky-top border-bottom mb-2 py-1">
+    <div class="row container-fluid pe-0">
+      <div class="col">
+        <button type="button" class="btn btn-primary mb-1 me-2" id="addTaskButton" data-bs-toggle="tooltip"
+          data-bs-placement="bottom" data-bs-title="Shortcut: Ctrl+N" disabled>Add a task</button>
+        <button type="button" class="btn btn-primary mb-1 me-2" id="saveButton" data-bs-toggle="tooltip"
+          data-bs-placement="bottom" data-bs-title="Shortcut: Ctrl+S" disabled>Save</button>
+        <input type="checkbox" class="btn-check" id="showSnoozedButton" autocomplete="off" disabled>
+        <label class="btn btn-primary mb-1 me-2" id="showSnoozedLabel" for="showSnoozedButton">Show Snoozed</label>
+        <button type="button" class="btn btn-primary mb-1 me-2" id="wakeAllButton" disabled>Wake All</button>
+        <button type="button" class="btn btn-primary mb-1 me-2" id="sortTasksButton" data-bs-toggle="tooltip"
+          data-bs-placement="bottom" data-bs-title="Sort tasks by dependency" disabled>Sort</button>
+        <input type="checkbox" class="btn-check" id="hideBlockedButton" autocomplete="off" disabled>
+        <label class="btn btn-primary mb-1 me-2" id="hideBlockedLabel" for="hideBlockedButton">Hide Blocked</label>
+      </div>
+      <div class="col-auto ms-3 p-0 font-monospace fs-2" id="navClock">
+      </div>
     </div>
-    <div class="col-auto ms-3 me-4 font-monospace fs-2" id="navClock">
+    <!-- Category controls -->
+    <div class="row container-fluid pe-0">
+      <div class="col-auto fw-bold pe-0 me-2">
+        Categories:
+      </div>
+      <div class="col pe-0">
+        <div class="row container-fluid p-0" id="categoryDisplayControls">
+          <div class="col-auto pe-0" id="categoryDisplayAll">
+            <div class="input-group input-group-sm">
+              <div class="input-group-text">
+                <input type="checkbox" class="form-check-input mt-0" checked id="categoryDisplayAllCheckbox">
+              </div>
+              <label for="categoryDisplayAllCheckbox" class="input-group-text user-select-none">All</label>
+            </div>
+          </div>
+          <div class="col-auto pe-0" id="categoryDisplayNone">
+            <div class="input-group input-group-sm">
+              <div class="input-group-text">
+                <input type="checkbox" class="form-check-input mt-0" id="categoryDisplayNoneCheckbox">
+              </div>
+              <label for="categoryDisplayNoneCheckbox" class="input-group-text user-select-none">None</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-auto pe-0 d-flex justify-content-end">
+        <!-- put the add category here -->
+        <div class="input-group me-2">
+          <button class="btn btn-outline-secondary" type="button" id="newCategoryButton"><i
+              class="bi bi-plus-lg"></i></button>
+          <input type="text" class="form-control" placeholder="New Category" aria-label="Add a new category"
+            aria-describedby="newCategoryButton" id="newCategoryText">
+        </div>
+        <select class="form-select form-select-sm category-dropdown-width" aria-label="Small select example"
+          id="editCategoryDropdown">
+          <option selected>Edit Category...</option>
+        </select>
+      </div>
     </div>
+
   </nav>
   <!-- The lists of tasks, main content -->
   <div class="container-fluid mb-5">
@@ -67,6 +109,27 @@
         <div class="modal-body" id="blockingTasksList">
           Other tasks depend on this
         </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" tabindex="-1" id="editCategoryModal">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5">Tasks in category: <span id="editCategoryName"></span></h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="editCategoryTasksList">
+          Tasks in this category
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Error message Toast -->
+  <div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="errorMessageToast" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-body">
+        The category name must be unique!
       </div>
     </div>
   </div>

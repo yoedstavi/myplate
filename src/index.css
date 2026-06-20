@@ -2,6 +2,10 @@
     width: 7rem;
 }
 
+.category-dropdown-width {
+    width: 9rem;
+}
+
 .scroll-margin-task {
     scroll-margin-top: 5em;
 }
