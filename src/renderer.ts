@@ -644,9 +644,9 @@ function fillBlockingTasks(uuid: string, title: string) {
             id="${ctrl}">
         </div>
         <div class="input-group-text w-75">
-          <div class="text-start text-truncate w-100">
+          <label for="${ctrl}" class="text-start text-truncate w-100">
             ${taskObj.title}
-          </div>
+          </label>
         </div>
       </div>
     `;
@@ -705,9 +705,9 @@ function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[
             id="${ctrl}">
         </div>
         <div class="input-group-text w-75">
-          <div class="text-start text-truncate w-100">
+          <label for="${ctrl}" class="text-start text-truncate w-100">
             ${taskObj.title}
-          </div>
+          </label>
         </div>
       </div>
     `;
@@ -777,9 +777,9 @@ function fillEditCategory(category: string) {
             id="${ctrl}">
         </div>
         <div class="input-group-text w-75">
-          <div class="text-start text-truncate w-100">
+          <label for="${ctrl}" class="text-start text-truncate w-100">
             ${taskObj.title}
-          </div>
+          </label>
         </div>
       </div>
     `;
