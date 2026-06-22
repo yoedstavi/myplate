@@ -239,6 +239,7 @@ type getTaskIdsRet = {
   doneTaskButtonId: string,
   snoozeTaskButtonId: string,
   historicTaskId: string,
+  historicTitleId: string,
   restoreTaskButtonId: string,
   historicDeleteButtonId: string,
   blockedByButtonId: string,
@@ -259,6 +260,7 @@ function getTaskIds(uuid: string): getTaskIdsRet {
     doneTaskButtonId: 'doneTask-' + uuid,
     snoozeTaskButtonId: 'snoozeTask-' + uuid,
     historicTaskId: 'historic-' + uuid,
+    historicTitleId: 'historicTitle-' + uuid,
     restoreTaskButtonId: 'restore-' + uuid,
     historicDeleteButtonId: 'historicDelete-' + uuid,
     blockedByButtonId: 'blockedBy-' + uuid,
@@ -328,11 +330,16 @@ function addTaskToPage(uuid: string, taskObj: TaskData) {
     newDoneTask.classList.add("show");
     taskMeta.isDoneVisible = true;
   }
-  newDoneTask.innerHTML = `
-    <div class="text-truncate col border py-1 align-middle me-0">
-      ${taskObj.title}
-    </div>
-    <div class="col-auto btn-group gx-0">
+
+  const newDoneTaskTitle = document.createElement('div');
+  newDoneTaskTitle.id = tids.historicTitleId;
+  newDoneTaskTitle.classList.add("text-truncate", "col", "border", "py-1", "align-middle", "me-0");
+  newDoneTaskTitle.innerText = taskObj.title;
+  newDoneTask.appendChild(newDoneTaskTitle);
+
+  const newDoneTaskButtonDiv = document.createElement('div');
+  newDoneTaskButtonDiv.classList.add("col-auto", "btn-group", "gx-0");
+  newDoneTaskButtonDiv.innerHTML = `
       <button type="button" id="${tids.restoreTaskButtonId}"
         class="btn btn-primary">
         Restore
@@ -341,9 +348,9 @@ function addTaskToPage(uuid: string, taskObj: TaskData) {
         class="btn btn-danger">
         Delete
       </button>
-    </div>
   `;
 
+  newDoneTask.appendChild(newDoneTaskButtonDiv);
   myDoneTasks.appendChild(newDoneTask);
   initTaskElements(newTask, newDoneTask, taskObj, taskMeta, uuid, tids);
 }
@@ -359,6 +366,7 @@ function initTaskElements(
   const collapseButton = document.getElementById(tids.collapseButtonId) as HTMLButtonElement;
   const titleInput = document.getElementById(tids.titleInputId) as HTMLInputElement;
   const titleText = document.getElementById(tids.titleTextId) as HTMLSpanElement;
+  const titleHistoricText = document.getElementById(tids.historicTitleId) as HTMLDivElement;
   const taskDetails = document.getElementById(tids.collapseTargetId) as HTMLDivElement;
   const titleTextCol = document.getElementById(tids.titleTextColId) as HTMLDivElement;
   const editCol1 = document.getElementById(tids.editCol1Id) as HTMLDivElement;
@@ -430,7 +438,8 @@ function initTaskElements(
       titleTextCol,
       editCol1,
       collapseButton,
-      titleText);
+      titleText,
+      titleHistoricText);
     editTitleDoneSaveCallback = () => { };
     startPeriodicSave();
   }
@@ -576,8 +585,14 @@ function taskEditTitle(titleInput: HTMLInputElement, titleText: HTMLSpanElement,
   });
 }
 
-function taskEditTitleDone(uuid: string, inputElement: HTMLInputElement, titleTextCol: HTMLDivElement,
-  editCol1: HTMLDivElement, collapseButton: HTMLButtonElement, titleText: HTMLSpanElement) {
+function taskEditTitleDone(
+  uuid: string,
+  inputElement: HTMLInputElement,
+  titleTextCol: HTMLDivElement,
+  editCol1: HTMLDivElement,
+  collapseButton: HTMLButtonElement,
+  titleText: HTMLSpanElement,
+  titleHistoricText: HTMLDivElement) {
   // check if this handler is necessary or was already called
   if (!inputElement.getAttribute("is-modified"))
     return;
@@ -588,6 +603,7 @@ function taskEditTitleDone(uuid: string, inputElement: HTMLInputElement, titleTe
   collapseButton.disabled = false;
   // set the Header text to the current input text
   titleText.innerText = inputElement.value;
+  titleHistoricText.innerText = inputElement.value;
   const task = resolveTaskByUuid(uuid);
   task.title = inputElement.value;
   inputElement.removeAttribute("is-modified");
