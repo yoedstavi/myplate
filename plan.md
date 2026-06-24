@@ -26,17 +26,13 @@
 
 ## Phase4
 
-- Add user definable categories
-- Assign categories to Tasks
-- Filter Task display by category
+- Task Categories
+- Done!
 
 ## Phase5
 
-- Clean-up the user menu
-- Start in a useful size
-- Create a good README
-- Build into an exe program
-- Publish to GitHub
+- Improve the README
+- Improve usability
 
 ## Phase6
 

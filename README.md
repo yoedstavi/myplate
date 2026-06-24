@@ -13,7 +13,6 @@ Clone the repo
 Open a bash shell in the project's root directory (git bash in Windows)
 ```bash
 npm install --save-dev @electron-forge/cli
-npm approve-scripts @parcel/watcher electron-winstaller
 npx electron-forge import
 rm forge.config.js    # apparently a bug, the correct file is forge.config.ts
 npm start             # test running as a dev
@@ -23,4 +22,8 @@ npm start             # test running as a dev
 ```bash
 npm run make
 ```
+
+## Data
+The data is saved in a file named `tasks.json`. The file is located in the working directory of the program (created if missing).  
+The file should not be modified manually. There are no integrity tests or attempts of recovery.
 
