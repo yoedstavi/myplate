@@ -389,6 +389,7 @@ function initTaskElements(
     maxLines: 40,
     minLines: 10,
     printMargin: false,
+    fontSize: 18
   });
   aceEditor.session.on('change', event => taskObj.notes = aceEditor.getValue());
   aceEditor.commands.addCommand({
