@@ -617,127 +617,101 @@ function evaluateDoneButtonState(uuid: string, taskObj: TaskData): void {
   btn.disabled = (taskObj.dependencyList.length != 0);
 }
 
+function modalCheckboxListElement(
+  taskObj: TaskData,
+  checked: boolean,
+  checkFunc: Function
+): HTMLDivElement {
+  const ctrl = crypto.randomUUID();
+
+  // <div class="input-group mb-3">
+  const topDiv = document.createElement("div");
+  topDiv.classList.add("input-group", "mb-3");
+
+  //  <div class="input-group-text">
+  const innerDiv1 = document.createElement("div");
+  innerDiv1.classList.add("input-group-text");
+  topDiv.appendChild(innerDiv1);
+
+  //    <input class="form-check-input mt-0" type="checkbox">
+  const checkbox = document.createElement("input");
+  checkbox.classList.add("form-check-input", "mt-0");
+  checkbox.id = ctrl;
+  checkbox.type = "checkbox";
+  checkbox.checked = checked;
+  innerDiv1.appendChild(checkbox)
+
+  //  <div class="input-group-text w-75">
+  const innerDiv2 = document.createElement("div");
+  innerDiv2.classList.add("input-group-text", "w-75");
+  topDiv.appendChild(innerDiv2);
+
+  //    <label for="${ctrl}" class="text-start text-truncate w-100">
+  const label = document.createElement("label");
+  label.setAttribute("for", ctrl);
+  label.innerText = taskObj.title;
+  innerDiv2.appendChild(label);
+
+  checkbox.addEventListener("click", () => checkFunc(checkbox.checked));
+  return topDiv;
+}
+
 function fillBlockingTasks(uuid: string, title: string) {
   const allBlockedBySet = getAllBlockedBy(uuid);
-  const eventGuide = new Map<string, {
-    blocking: boolean,
-    uuid: string,
-    taskObj: TaskData,
-  }>();
-  let content = '<h3 class="fs-5">Tasks blocked by: ' + title + '</h3>';
+  const h3title = document.createElement("h3");
+  h3title.classList.add("fs-5");
+  h3title.innerText = title;
+  blockingTasksList.replaceChildren(h3title);
   for (const [taskId, taskObj] of Object.entries(taskData)) {
     // prevent circular dependency
     if (taskId == uuid || taskObj.isDone || allBlockedBySet.has(taskId))
       continue;
 
-    const ctrl = crypto.randomUUID();
+    const checkFunc = (chk: boolean) => {
+      if (chk) {
+        addTaskToDependencyList(taskObj, uuid);
+        evaluateDoneButtonState(taskId, taskObj);
+      }
+      else {
+        removeTaskFromDependencyList(taskObj, uuid);
+        evaluateDoneButtonState(taskId, taskObj);
+      }
+    };
+
     const blocking = (taskObj.dependencyList.lastIndexOf(uuid) != -1);
-    eventGuide.set(ctrl, {
-      blocking: blocking,
-      uuid: taskId,
-      taskObj: taskObj,
-    });
-    content += `
-      <div class="input-group mb-3">
-        <div class="input-group-text">
-          <input class="form-check-input mt-0" type="checkbox"
-            ${blocking ? "checked" : ""}
-            id="${ctrl}">
-        </div>
-        <div class="input-group-text w-75">
-          <label for="${ctrl}" class="text-start text-truncate w-100">
-            ${taskObj.title}
-          </label>
-        </div>
-      </div>
-    `;
-  }
-  blockingTasksList.replaceChildren();
-  blockingTasksList.innerHTML = content;
-
-  // Now the elements exist, attach the events
-  for (const [id, obj] of eventGuide) {
-    const checkbox = document.getElementById(id) as HTMLInputElement;
-    const checkFunc = () => {
-      addTaskToDependencyList(obj.taskObj, uuid);
-      evaluateDoneButtonState(obj.uuid, obj.taskObj);
-      checkbox.removeEventListener("click", checkFunc);
-      checkbox.addEventListener("click", uncheckFunc);
-    };
-
-    const uncheckFunc = () => {
-      removeTaskFromDependencyList(obj.taskObj, uuid);
-      evaluateDoneButtonState(obj.uuid, obj.taskObj);
-      checkbox.removeEventListener("click", uncheckFunc);
-      checkbox.addEventListener("click", checkFunc);
-    };
-
-    if (obj.blocking)
-      checkbox.addEventListener("click", uncheckFunc);
-    else
-      checkbox.addEventListener("click", checkFunc);
+    blockingTasksList.appendChild(
+      modalCheckboxListElement(taskObj, blocking, checkFunc));
   }
 }
 
 function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[]) {
   const immediateBlockedBySet = new Set(dependencyList);
   const allBlocking = getAllBlocking(uuid);
-  const eventGuide = new Map<string, {
-    blockedBy: boolean,
-    uuid: string,
-  }>();
-  let content = '<h3 class="fs-5">Tasks that are blocking: ' + title + '</h3>';
+  const h3title = document.createElement("h3");
+  h3title.classList.add("fs-5");
+  h3title.innerText = title;
+  blockedByTasksList.replaceChildren(h3title);
+
   for (const [taskId, taskObj] of Object.entries(taskData)) {
     // prevent circular dependency
     if (taskId == uuid || taskObj.isDone || allBlocking.has(taskId))
       continue;
 
-    const ctrl = crypto.randomUUID();
     const blockedBy = immediateBlockedBySet.has(taskId);
-    eventGuide.set(ctrl, {
-      blockedBy: blockedBy,
-      uuid: taskId,
-    });
-    content += `
-      <div class="input-group mb-3">
-        <div class="input-group-text">
-          <input class="form-check-input mt-0" type="checkbox"
-            ${blockedBy ? "checked" : ""}
-            id="${ctrl}">
-        </div>
-        <div class="input-group-text w-75">
-          <label for="${ctrl}" class="text-start text-truncate w-100">
-            ${taskObj.title}
-          </label>
-        </div>
-      </div>
-    `;
-  }
-  blockedByTasksList.replaceChildren();
-  blockedByTasksList.innerHTML = content;
 
-  // Now the elements exist, attach the events
-  const taskObj = resolveTaskByUuid(uuid);
-  for (const [id, obj] of eventGuide) {
-    const checkbox = document.getElementById(id) as HTMLInputElement;
-    const checkFunc = () => {
-      addTaskToDependencyList(taskObj, obj.uuid);
-      evaluateDoneButtonState(uuid, taskObj);
-      checkbox.removeEventListener("click", checkFunc);
-      checkbox.addEventListener("click", uncheckFunc);
+    const checkFunc = (chk: boolean) => {
+      if (chk) {
+        addTaskToDependencyList(taskObj, taskId);
+        evaluateDoneButtonState(uuid, taskObj);
+      }
+      else {
+        removeTaskFromDependencyList(taskObj, taskId);
+        evaluateDoneButtonState(uuid, taskObj);
+      }
     };
 
-    const uncheckFunc = () => {
-      removeTaskFromDependencyList(taskObj, obj.uuid);
-      evaluateDoneButtonState(uuid, taskObj);
-      checkbox.removeEventListener("click", uncheckFunc);
-      checkbox.addEventListener("click", checkFunc);
-    };
-
-    if (obj.blockedBy)
-      checkbox.addEventListener("click", uncheckFunc);
-    else
-      checkbox.addEventListener("click", checkFunc);
+    blockedByTasksList.appendChild(
+      modalCheckboxListElement(taskObj, blockedBy, checkFunc));
   }
 }
 
@@ -752,64 +726,26 @@ function removeCategoryFromTask(taskObj: TaskData, category: string) {
 }
 
 function fillEditCategory(category: string) {
-  const eventGuide = new Map<string, {
-    inCategory: boolean,
-    uuid: string,
-    taskObj: TaskData,
-  }>();
   editCategoryName.innerText = category;
-  let content = '';
+  editCategoryTasksList.replaceChildren();
   for (const [taskId, taskObj] of Object.entries(taskData)) {
     if (taskObj.isDone) // skip done tasks
       continue;
 
     const ctrl = crypto.randomUUID();
     const inCategory = (taskObj.categories.lastIndexOf(category) != -1);
-    eventGuide.set(ctrl, {
-      inCategory: inCategory,
-      uuid: taskId,
-      taskObj: taskObj,
-    });
-    content += `
-      <div class="input-group mb-3">
-        <div class="input-group-text">
-          <input class="form-check-input mt-0" type="checkbox"
-            ${inCategory ? "checked" : ""}
-            id="${ctrl}">
-        </div>
-        <div class="input-group-text w-75">
-          <label for="${ctrl}" class="text-start text-truncate w-100">
-            ${taskObj.title}
-          </label>
-        </div>
-      </div>
-    `;
-  }
-  editCategoryTasksList.replaceChildren();
-  editCategoryTasksList.innerHTML = content;
 
-  // Now the elements exist, attach the events
-  for (const [id, obj] of eventGuide) {
-    const checkbox = document.getElementById(id) as HTMLInputElement;
-    const checkFunc = () => {
-      addCategoryToTask(obj.taskObj, category);
-      checkbox.removeEventListener("click", checkFunc);
-      checkbox.addEventListener("click", uncheckFunc);
+    const checkFunc = (chk: boolean) => {
+      if (chk)
+        addCategoryToTask(taskObj, category);
+      else
+        removeCategoryFromTask(taskObj, category);
     };
 
-    const uncheckFunc = () => {
-      removeCategoryFromTask(obj.taskObj, category);
-      checkbox.removeEventListener("click", uncheckFunc);
-      checkbox.addEventListener("click", checkFunc);
-    };
-
-    if (obj.inCategory)
-      checkbox.addEventListener("click", uncheckFunc);
-    else
-      checkbox.addEventListener("click", checkFunc);
+    editCategoryTasksList.appendChild(
+      modalCheckboxListElement(taskObj, inCategory, checkFunc));
   }
 }
-
 
 const navClock = document.getElementById("navClock") as HTMLDivElement;
 function modifyClock() {
