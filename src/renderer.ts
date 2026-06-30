@@ -648,6 +648,7 @@ function modalCheckboxListElement(
 
   //    <label for="${ctrl}" class="text-start text-truncate w-100">
   const label = document.createElement("label");
+  label.classList.add("text-start", "text-truncate", "w-100");
   label.setAttribute("for", ctrl);
   label.innerText = taskObj.title;
   innerDiv2.appendChild(label);
