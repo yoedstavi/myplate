@@ -693,6 +693,7 @@ function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[
   h3title.innerText = title;
   blockedByTasksList.replaceChildren(h3title);
 
+  const taskObjBlocked = resolveTaskByUuid(uuid);
   for (const [taskId, taskObj] of Object.entries(taskData)) {
     // prevent circular dependency
     if (taskId == uuid || taskObj.isDone || allBlocking.has(taskId))
@@ -702,12 +703,12 @@ function fillBlockedByTasks(uuid: string, title: string, dependencyList: string[
 
     const checkFunc = (chk: boolean) => {
       if (chk) {
-        addTaskToDependencyList(taskObj, taskId);
-        evaluateDoneButtonState(uuid, taskObj);
+        addTaskToDependencyList(taskObjBlocked, taskId);
+        evaluateDoneButtonState(uuid, taskObjBlocked);
       }
       else {
-        removeTaskFromDependencyList(taskObj, taskId);
-        evaluateDoneButtonState(uuid, taskObj);
+        removeTaskFromDependencyList(taskObjBlocked, taskId);
+        evaluateDoneButtonState(uuid, taskObjBlocked);
       }
     };
 
@@ -733,7 +734,6 @@ function fillEditCategory(category: string) {
     if (taskObj.isDone) // skip done tasks
       continue;
 
-    const ctrl = crypto.randomUUID();
     const inCategory = (taskObj.categories.lastIndexOf(category) != -1);
 
     const checkFunc = (chk: boolean) => {
